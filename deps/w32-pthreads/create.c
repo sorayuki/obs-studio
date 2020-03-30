@@ -41,6 +41,12 @@
 #include <process.h>
 #endif
 
+#include <stdio.h>
+#pragma intrinsic(_ReturnAddress)
+
+unsigned int __stdcall GetThreadId(void*);
+void __stdcall OutputDebugStringA(const char*);
+
 int
 pthread_create (pthread_t * tid,
 		const pthread_attr_t * attr,
@@ -221,6 +227,16 @@ pthread_create (pthread_t * tid,
 
       if (run)
 	{
+    void** pRetAddr = _AddressOfReturnAddress();
+    void** pRetAddr1 = pRetAddr ? &((void**)(pRetAddr[-1]))[1] : 0;
+    void** pRetAddr2 = pRetAddr1 ? &((void**)(pRetAddr1[-1]))[1] : 0;
+    void** pRetAddr3 = pRetAddr2 ? &((void**)(pRetAddr2[-1]))[1] : 0;
+
+    char buf[1024];
+    sprintf(buf, "[pthread] new thread %d called from 0x%p 0x%p 0x%p 0x%p\r\n", GetThreadId(threadH),
+      *pRetAddr, *pRetAddr1, *pRetAddr2, *pRetAddr3
+    );
+    OutputDebugStringA(buf);
 	  ResumeThread (threadH);
 	}
     }
